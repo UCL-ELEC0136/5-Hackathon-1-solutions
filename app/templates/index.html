@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>UCL-ELEC0136 - Hackathon #1</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap">
+    <script>
+        // JavaScript function to handle delete requests
+        function deleteTeam(teamIndex) {
+            fetch("/delete", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: "team_index=" + teamIndex,
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert("Failed to delete team.");
+                }
+            });
+        }
+
+        // JavaScript function to handle update requests
+        function updateScores() {
+            // Collect all scores into an object
+            const scoresData = {};
+            const rows = document.querySelectorAll("table tr");
+            rows.forEach((row, teamIndex) => {
+                if (teamIndex === 0) return; // Skip header row
+                const scoreInputs = row.querySelectorAll("input[type='number']");
+                const scores = Array.from(scoreInputs).map(input => input.value);
+                scoresData[`team-${teamIndex - 1}`] = scores;
+            });
+
+            // Send the scores data to the /update route
+            fetch("/update", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(scoresData),
+            }).then(response => {
+                if (response.ok) {
+                    alert("Scores updated successfully.");
+                } else {
+                    alert("Failed to update scores.");
+                }
+            });
+        }
+
+        // JavaScript function to update the average score in real-time
+        function updateAverage(row) {
+            const scoreInputs = row.querySelectorAll("input[type='number']");
+            let sum = 0;
+            let count = 0;
+
+            // Calculate the sum of all scores in the row
+            scoreInputs.forEach(input => {
+                const value = parseFloat(input.value);
+                if (!isNaN(value)) {
+                    sum += value;
+                    count++;
+                }
+            });
+
+            // Calculate the average
+            const average = count > 0 ? (sum / count).toFixed(2) : "0.00";
+
+            // Find the average cell and update its content
+            const averageCell = row.querySelector(".average-cell");
+            averageCell.textContent = average;
+        }
+
+        // Add event listeners to all score inputs to trigger real-time updates
+        document.addEventListener("DOMContentLoaded", () => {
+            const rows = document.querySelectorAll("table tr");
+            rows.forEach((row, index) => {
+                if (index === 0) return; // Skip header row
+                const scoreInputs = row.querySelectorAll("input[type='number']");
+                scoreInputs.forEach(input => {
+                    input.addEventListener("input", () => updateAverage(row));
+                });
+            });
+        });
+
+        let timerDuration = 2 * 60 * 60; // 2 hours in seconds
+        let remainingTime = timerDuration;
+        let timerInterval = null;
+
+        function formatTime(seconds) {
+            const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            return `${hrs}:${mins}:${secs}`;
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById("timer-display").textContent = formatTime(remainingTime);
+        }
+
+        function startTimer() {
+            if (timerInterval) return; // Prevent multiple intervals
+            timerInterval = setInterval(() => {
+                if (remainingTime > 0) {
+                    remainingTime--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    alert("Time's up!");
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            remainingTime = timerDuration;
+            updateTimerDisplay();
+        }
+
+        // Initialize the timer display on page load
+        document.addEventListener("DOMContentLoaded", updateTimerDisplay);
+
+        function scrollToTimer() {
+            document.getElementById("timer-section").scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>UCL-ELEC0136 - Hackathon #1</h1>
+        <h2>Data Acquisition and Processing Systems</h2>
+
+        <div class="fullscreen-timer" id="timer-section">
+            <!-- <h2>Hackathon Timer</h2> -->
+            <div id="timer-display">02:00:00</div>
+            <div class="timer-controls">
+                <button onclick="startTimer()"><i class="fas fa-play"></i></button>
+                <button onclick="pauseTimer()"><i class="fas fa-pause"></i></button>
+                <button onclick="resetTimer()"><i class="fas fa-redo"></i></button>
+            </div>
+        </div>
+        <!-- Arrow down button -->
+        <div class="arrow-down">
+            <button onclick="scrollToTimer()"><i class="fas fa-arrow-down"></i></button>
+        </div>
+        <!-- Form to Add New Team -->
+        <h1>Scoreboard</h1>
+        <div class="box">
+            <form method="POST" action="/">
+                {{ team_form.hidden_tag() }}
+                <label for="team_name">Team Name:</label>
+                {{ team_form.team_name() }}
+                {% if team_form.team_name.errors %}
+                <div class="error">{{ team_form.team_name.errors[0] }}</div>
+                {% endif %}
+
+                <h3>Scores:</h3>
+
+                <label>{{ team_form.students_score.label }}</label>
+                {{ team_form.students_score() }}
+                {% if team_form.students_score.errors %}
+                <div class="error">{{ team_form.students_score.errors[0] }}</div>
+                {% endif %}
+
+                <label>{{ team_form.edu_score.label }}</label>
+                {{ team_form.edu_score() }}
+                {% if team_form.edu_score.errors %}
+                <div class="error">{{ team_form.edu_score.errors[0] }}</div>
+                {% endif %}
+
+                <label>{{ team_form.david_score.label }}</label>
+                {{ team_form.david_score() }}
+                {% if team_form.david_score.errors %}
+                <div class="error">{{ team_form.david_score.errors[0] }}</div>
+                {% endif %}
+
+                <label>{{ team_form.code_quality.label }}</label>
+                {{ team_form.code_quality() }}
+                {% if team_form.code_quality.errors %}
+                <div class="error">{{ team_form.code_quality.errors[0] }}</div>
+                {% endif %}
+
+                <label>{{ team_form.reproducibility.label }}</label>
+                {{ team_form.reproducibility() }}
+                {% if team_form.reproducibility.errors %}
+                <div class="error">{{ team_form.reproducibility.errors[0] }}</div>
+                {% endif %}
+
+                <label>{{ team_form.correctness.label }}</label>
+                {{ team_form.correctness() }}
+                {% if team_form.correctness.errors %}
+                <div class="error">{{ team_form.correctness.errors[0] }}</div>
+                {% endif %}
+
+                <button type="submit">Add Team</button>
+            </form>
+        </div>
+
+        <!-- Teams and Scores Table -->
+        <div class="box">
+            <h2>Teams and Scores</h2>
+
+            <table>
+                <tr>
+                    <th>Team Name</th>
+                    <th>Student's score</th>
+                    <th>Edu's score</th>
+                    <th>David's score</th>
+                    <th>Code quality</th>
+                    <th>Reproducibility</th>
+                    <th>Correctness</th>
+                    <th>Average</th>
+                    <th>Action</th>
+                </tr>
+                {% for team in teams %}
+                <tr>
+                    <td>{{ team['team_name'] }}</td>
+                    {% for j in range(team['scores'] | length) %}
+                    <td><input type="number" value="{{ team['scores'][j] }}" data-team-index="{{ loop.index0 }}"
+                            data-score-index="{{ j }}" disabled></td>
+                    {% endfor %}
+                    <td class="average-cell">{{ team['average'] | round(2) }}</td>
+                    <td>
+                        <button type="button" onclick="deleteTeam({{ loop.index0 }})">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

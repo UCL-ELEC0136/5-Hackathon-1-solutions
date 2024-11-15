@@ -1,0 +1,11 @@
+requests
+jaxlib
+jax
+matplotlib
+pandas
+pymongo
+black
+pylint
+tyro
+Flask
+Flask-WTF

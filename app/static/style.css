@@ -1,0 +1,333 @@
+@font-face {
+    font-family: 'Digital-7';
+    src: url('/static/fonts/digital-7.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: '14-Segment';
+    src: url('/static/fonts/14-Segment-led.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* General body styling */
+body {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #000;
+    color: #00ff00;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Title styling */
+h1 {
+    color: #00ff00;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 5px #00ff00;
+}
+
+h2 {
+    color: #00cc00;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Subtitle styling */
+h3 {
+    color: #009900;
+    font-size: 1.2rem;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* Container styling */
+.container {
+    width: 100%;
+    max-width: 1000px;
+    /* Increased max width for more space */
+    margin: 0 auto;
+}
+
+/* Form and table common styling */
+.box {
+    background-color: #111;
+    border: 1px solid #00ff00;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 255, 0, 0.2);
+    width: 100%;
+    /* Ensures box takes up full container width */
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Form styling */
+form label {
+    font-weight: bold;
+    color: #00ff00;
+    margin-top: 10px;
+    display: block;
+}
+
+form input[type="text"],
+form input[type="number"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 8px 0 15px 0;
+    border: 1px solid #00ff00;
+    background-color: #000;
+    color: #00ff00;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+form input[type="text"]:focus,
+form input[type="number"]:focus {
+    border: 1px solid #00cc00;
+    outline: none;
+    background-color: #111;
+}
+
+/* Button styling */
+button {
+    background-color: #00ff00;
+    color: #000;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: 'Courier New', Courier, monospace;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 15px;
+    width: 100%;
+    max-width: 200px;
+}
+
+button:hover {
+    background-color: #00cc00;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    /* Full width within the box */
+    border-collapse: collapse;
+    background-color: #000;
+    color: #00ff00;
+    table-layout: fixed;
+    /* Ensures columns are evenly distributed */
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #009900;
+    font-size: 1rem;
+    word-wrap: break-word;
+    /* Ensures text wraps within cells */
+}
+
+th {
+    background-color: #111;
+    color: #00ff00;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #111;
+}
+
+/* Average score column styling */
+td:last-child {
+    font-weight: bold;
+    color: #00cc00;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    h2 {
+        font-size: 1.6rem;
+    }
+
+    .container,
+    .box,
+    form,
+    table {
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 10px;
+    }
+}
+
+/* Style the score inputs to match the Matrix theme */
+table input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 1.2rem;
+    /* Increase font size */
+    color: #00ff00;
+    /* Matrix green */
+    background-color: #111;
+    /* Dark background */
+    border: 1px solid #00ff00;
+    /* Matrix green border */
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    text-align: center;
+    /* Center-align the score values */
+    box-sizing: border-box;
+}
+
+/* Add focus effect for score inputs */
+table input[type="number"]:focus {
+    outline: none;
+    border-color: #00cc00;
+    /* Slightly darker green on focus */
+    background-color: #000;
+    /* Black background on focus */
+}
+
+/* Style for the delete button to ensure single-line text */
+table button {
+    min-width: 70px;
+    /* Ensures the button is wide enough */
+    padding: 8px 12px;
+    /* Adjust padding for a comfortable fit */
+    font-size: 1rem;
+    /* Maintain consistent font size */
+    white-space: nowrap;
+    /* Prevent text from wrapping to the next line */
+    background-color: #00ff00;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+table button:hover {
+    background-color: #00cc00;
+}
+
+/* Hide the up/down arrows on number inputs */
+table input[type="number"] {
+    -moz-appearance: textfield;
+    /* For Firefox */
+}
+
+table input[type="number"]::-webkit-outer-spin-button,
+table input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    /* For Chrome, Safari, Edge, and Opera */
+    margin: 0;
+}
+
+/* Style for disabled score inputs to look like plain text */
+table input[type="number"][disabled] {
+    background-color: transparent;
+    /* Make background transparent */
+    color: #00ff00;
+    /* Keep Matrix green for consistency */
+    border: none;
+    /* Remove border */
+    text-align: center;
+    /* Center-align the values */
+    font-size: 1.2rem;
+    /* Increase font size for readability */
+    font-family: 'Courier New', Courier, monospace;
+    /* Use monospace font */
+    pointer-events: none;
+    /* Ensure it is truly non-interactive */
+}
+
+/* Style for form validation error messages */
+.error {
+    color: #ff4c4c; /* Red for error messages */
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+/* Fullscreen Timer Styling */
+.fullscreen-timer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full height of the viewport */
+    background-color: #000; /* Matrix black background */
+    color: #00ff00; /* Matrix green color for text */
+    text-align: center;
+}
+
+.fullscreen-timer h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #00ff00;
+}
+
+#timer-display {
+    font-size: 9rem; /* Larger font for readability */
+    /* font-weight: bold; */
+    color: #00ff00;
+    background-color: #111;
+    padding: 20px 40px;
+    border: 2px solid #00ff00;
+    border-radius: 10px;
+    font-family: 'Digital-7', Courier, monospace;
+    margin-bottom: 20px;
+}
+
+.timer-controls {
+    display: flex; /* Align buttons in a row */
+    gap: 20px; /* Add space between buttons */
+}
+
+.timer-controls button:hover {
+    background-color: #00cc00;
+}
+
+
+/* Arrow Down Button Styling */
+.arrow-down {
+    position: fixed;
+    bottom: 50px;
+    left: 90%;
+    transform: translateX(-50%);
+}
+
+.arrow-down button {
+    background-color: #000000;
+    color:  #00ff00;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: background-color 0.3s;
+}
+
+.arrow-down button:hover {
+    color: #00cc00;
+}
