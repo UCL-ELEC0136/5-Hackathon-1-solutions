@@ -1,0 +1,149 @@
+name: Autograding
+on:
+  push:
+    branches:
+      - feedback
+  workflow_dispatch:
+
+jobs:
+  score-code:
+    runs-on: ${{ matrix.os }}-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      PYLINT_MESSAGE: ${{ steps.linting.outputs.PYLINT_MESSAGE }}
+      PYLINT_SCORE: ${{ steps.linting.outputs.PYLINT_SCORE }}
+      TEAM_NAME: ${{ steps.correctness.outputs.TEAM_NAME }}
+      REPRODUCIBILITY_OUTPUT: ${{ steps.reproducibility.outputs.REPRODUCIBILITY_OUTPUT }}
+      REPRODUCIBILITY_SCORE: ${{ steps.reproducibility.outputs.REPRODUCIBILITY_SCORE }}
+      CORRECTNESS_OUTPUT: ${{ steps.correctness.outputs.CORRECTNESS_OUTPUT }}
+      MESSAGE: ${{ steps.message.outputs.MESSAGE }}
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        os: ["ubuntu"]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniforge-version: latest
+          environment-file: environment.yml
+          activate-environment: daps-hackathon
+          auto-activate-base: false
+
+      - name: Check code quality
+        id: linting
+        if: always()
+        run: |
+          pip install pylint
+          PYLINT_MESSAGE=$(pylint -ry $(git ls-files '*.py') ||:)
+          PYLINT_SCORE=$(echo "$PYLINT_MESSAGE" | grep "Your code has been rated at" | awk '{print $7}' | cut -d'/' -f1)
+
+          echo 'PYLINT_MESSAGE<<EOF' >> $GITHUB_OUTPUT
+          echo "$PYLINT_MESSAGE" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+          echo 'PYLINT_SCORE<<EOF' >> $GITHUB_OUTPUT
+          echo "$PYLINT_SCORE" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Check for reproducibility
+        id: reproducibility
+        if: always()
+        run: |
+          if REPRODUCIBILITY_OUTPUT=$(python main.py --db-name=hackathon-2024-reproducibility --github-token=${{ secrets.GITHUB_TOKEN }} 2>&1 || false); then
+              REPRODUCIBILITY_SCORE=1
+          else
+              REPRODUCIBILITY_SCORE=0
+          fi
+
+          echo 'REPRODUCIBILITY_OUTPUT<<EOF' >> $GITHUB_OUTPUT
+          echo "$REPRODUCIBILITY_OUTPUT" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+          echo 'REPRODUCIBILITY_SCORE<<EOF' >> $GITHUB_OUTPUT
+          echo "$REPRODUCIBILITY_SCORE" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Check for correctness
+        id: correctness
+        if: always()
+        run: |
+          echo GitHub repo name is: ${{ github.repository }}
+          TEAM_NAME=$(echo ${{ github.repository }} | sed 's/.*\/5-HACKATHON-1-//Ig')
+          echo Team name is: $TEAM_NAME
+          CORRECTNESS_OUTPUT=$(python test.py --db-name=hackathon-2024 --team_name=$TEAM_NAME) || CORRECTNESS_OUTPUT="{total: 0}"
+          CORRECTNESS_SCORE=$(echo $CORRECTNESS_OUTPUT | grep -o "[0-9]*/[0-9]*")
+
+          echo 'TEAM_NAME<<EOF' >> $GITHUB_OUTPUT
+          echo "$TEAM_NAME" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+          echo 'CORRECTNESS_OUTPUT<<EOF' >> $GITHUB_OUTPUT
+          echo "$CORRECTNESS_OUTPUT" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+          echo 'CORRECTNESS_SCORE<<EOF' >> $GITHUB_OUTPUT
+          echo "$CORRECTNESS_SCORE" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Compose message
+        id: message
+        if: always()
+        run: |
+          MESSAGE="# Autograding report"$'\n'
+          MESSAGE+="### Team name:"$'\n'
+          MESSAGE+='<pre><code>'
+          MESSAGE+="Team-${{ steps.correctness.outputs.TEAM_NAME }}"
+          MESSAGE+='</pre></code>'$'\n'
+
+          MESSAGE+="### Code quality:"$'\n'
+          MESSAGE+='<pre><code>'
+          MESSAGE+="${{ steps.linting.outputs.PYLINT_MESSAGE }}"
+          MESSAGE+='</pre></code>'$'\n'
+
+          MESSAGE+="### Code quality score:"$'\n'
+          MESSAGE+='<pre><code>'
+          MESSAGE+="${{ steps.linting.outputs.PYLINT_SCORE }}"
+          MESSAGE+='</pre></code>'$'\n'
+
+          MESSAGE+="### Reproducibility output:"$'\n'
+          MESSAGE+='<pre><code>'
+          MESSAGE+="${{ steps.reproducibility.outputs.REPRODUCIBILITY_OUTPUT }}"
+          MESSAGE+='</pre></code>'$'\n'
+
+          MESSAGE+="### Reproducibility score:"$'\n'
+          MESSAGE+='<pre><code>'
+          MESSAGE+="${{ steps.reproducibility.outputs.REPRODUCIBILITY_SCORE }}"
+          MESSAGE+='</pre></code>'$'\n'
+
+          MESSAGE+="### Correctness output:"$'\n'
+          MESSAGE+='<pre><code>'
+          MESSAGE+="${{ steps.correctness.outputs.CORRECTNESS_OUTPUT }}"
+          MESSAGE+='</pre></code>'$'\n'
+
+          MESSAGE+="### Correctness score:"$'\n'
+          MESSAGE+='<pre><code>'
+          MESSAGE+="${{ steps.correctness.outputs.CORRECTNESS_SCORE }}"
+          MESSAGE+='</pre></code>'$'\n'
+
+          echo "$MESSAGE"
+
+          echo 'MESSAGE<<EOF' >> $GITHUB_OUTPUT
+          echo "$MESSAGE" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Post PR message
+        uses: mshick/add-pr-comment@v2
+        if: always()
+        with:
+          message: ${{ steps.message.outputs.MESSAGE }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
